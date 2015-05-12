@@ -72,6 +72,16 @@ function moveForward(){
   $('#polygonButtonContainer .polygonButton').eq(currentPolygonIndex).addClass('currentPolygonButton')
 }
 
+function save(){
+  $.ajax({
+      url: 'update_question',
+      type: 'POST',
+      data: JSON.stringify({"polygons":polygons}),
+      contentType: 'application/json; charset=utf-8',
+      dataType: 'json'
+  });
+}
+
 var polygons = [];
 var currentPolygonIndex = -1;
 
@@ -121,6 +131,8 @@ $(function() {
 
   $("#moveBack").click(moveBack);
   $("#moveForward").click(moveForward);
+
+  $("#save").click(save);
 
   loadImage("question.jpg");
 });
