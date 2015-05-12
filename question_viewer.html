@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+      #viewport {
+        position: relative;
+      }
+
+      .layer {
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+
+    </style>
+    <script src="jquery-1.11.3.min.js"></script>
+    <script src="jquery-ui.min.js"></script>
+    <script src="common.js"></script>
+    <script src="question_viewer.js"></script>
+  </head>
+  <body>
+    <div id = "viewport">
+      <img id="baseImage" class="layer"></img>
+      <canvas class="layer" id="polygonCanvas"></canvas>
+    </div>
+    <button id="previous" type="button"><</button>
+    <button id="next" type="button">></button>
+  </body>
+</html> 

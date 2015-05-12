@@ -3,7 +3,7 @@ function addVertexToContainer(x, y){
 
   $("#vertexContainer").append('<div class="vertex" ' + 'style="left:' + (x - vertexSize/2)  + 'px; top:' + (y - vertexSize/2) + 'px;"></div>')
 
-  function updateVertex() {
+  function updateVertex(){
     var i = $('#vertexContainer .vertex').index($(this));
     var position = polygons[currentPolygonIndex].vertices[i];
     position.x = parseInt($(this).css('left')) + vertexSize/2;
@@ -72,11 +72,37 @@ function moveForward(){
   $('#polygonButtonContainer .polygonButton').eq(currentPolygonIndex).addClass('currentPolygonButton')
 }
 
+function addPolygonButton(polygonIndex){
+    $('#polygonButtonContainer').append('<button class="polygonButton" polygonIndex='+polygonIndex+' type="button">'+polygonIndex+'</button>')
+    $("#polygonButtonContainer .polygonButton:last-child").click(function(){
+      if(currentPolygonIndex == parseInt($(this).attr('polygonIndex'))) return;
+      currentPolygonIndex = parseInt($(this).attr('polygonIndex'));
+      $("#polygonButtonContainer .currentPolygonButton").removeClass('currentPolygonButton');
+      $(this).addClass('currentPolygonButton');
+      $("#vertexContainer").empty();
+      for(var vertexIndex in polygons[currentPolygonIndex].vertices) {
+        var position = polygons[currentPolygonIndex].vertices[vertexIndex];
+        addVertexToContainer(position.x, position.y);
+      }
+      drawPoly();
+    });
+}
+
 function save(){
+  questionObj = {polygons: []};
+
+  for(var polygonIndex in polygons) {
+    questionObj.polygons[polygonIndex] = {vertices: []};
+    for(var vertexIndex in polygons[polygonIndex].vertices) {
+      var position = polygons[polygonIndex].vertices[vertexIndex];
+      questionObj.polygons[polygonIndex].vertices[vertexIndex] = {x: Math.round(position.x/scaleRatio), y: Math.round(position.y/scaleRatio)}
+    }
+  }
+
   $.ajax({
       url: 'update_question',
       type: 'POST',
-      data: JSON.stringify({"polygons":polygons}),
+      data: JSON.stringify(questionObj),
       contentType: 'application/json; charset=utf-8',
       dataType: 'json'
   });
@@ -84,8 +110,9 @@ function save(){
 
 var polygons = [];
 var currentPolygonIndex = -1;
+var questionObj;
 
-$(function() {
+function init() {
 
   var canvas = document.getElementById("polygonCanvas");
   var context = canvas.getContext("2d");
@@ -101,20 +128,9 @@ $(function() {
   $("#addPolygon").click(function(){
     currentPolygonIndex = polygons.length;
     polygons[currentPolygonIndex] = {vertices:[]};
+    addPolygonButton(currentPolygonIndex);
     $("#polygonButtonContainer .currentPolygonButton").removeClass('currentPolygonButton');
-    $('#polygonButtonContainer').append('<button class="polygonButton currentPolygonButton" polygonIndex='+currentPolygonIndex+' type="button">'+currentPolygonIndex+'</button>')
-    $("#polygonButtonContainer .polygonButton:last-child").click(function(){
-      if(currentPolygonIndex == parseInt($(this).attr('polygonIndex'))) return;
-      currentPolygonIndex = parseInt($(this).attr('polygonIndex'));
-      $("#polygonButtonContainer .currentPolygonButton").removeClass('currentPolygonButton');
-      $(this).addClass('currentPolygonButton');
-      $("#vertexContainer").empty();
-      for(var vertexIndex in polygons[currentPolygonIndex].vertices) {
-        var position = polygons[currentPolygonIndex].vertices[vertexIndex];
-        addVertexToContainer(position.x, position.y);
-      }
-      drawPoly();
-    });
+    $("#polygonButtonContainer .polygonButton:last-child").addClass('currentPolygonButton');
     $("#vertexContainer").empty();
     drawPoly();
   });
@@ -131,8 +147,25 @@ $(function() {
 
   $("#moveBack").click(moveBack);
   $("#moveForward").click(moveForward);
-
   $("#save").click(save);
 
-  loadImage("question.jpg");
+  loadImage("question.jpg", function(){
+    for(var polygonIndex in questionObj.polygons) {
+      polygons[polygonIndex] = {vertices: []};
+      for(var vertexIndex in questionObj.polygons[polygonIndex].vertices) {
+        var position = questionObj.polygons[polygonIndex].vertices[vertexIndex];
+        polygons[polygonIndex].vertices[vertexIndex] = {x: Math.round(position.x*scaleRatio), y: Math.round(position.y*scaleRatio)}
+      }
+      addPolygonButton(polygonIndex);
+    }
+
+    drawPoly();
+  });
+}
+
+$(function(){
+  $.getJSON( "question.json", function(data) {
+    questionObj = data;
+    init();
+  });
 });

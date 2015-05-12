@@ -6,7 +6,9 @@ function initCanvas(name) {
 	context.canvas.height = $("#baseImage").height();
 }
 
-function loadImage(imagePath) {
+var scaleRatio;
+
+function loadImage(imagePath, callback) {
 	var imageObj = new Image();
 
 	imageObj.onload = function() {
@@ -34,12 +36,15 @@ function loadImage(imagePath) {
 		width = parseInt(width);
 		height = parseInt(height);
 
+		scaleRatio = width/imageObj.width;
+
 		$("#baseImage").width(width);
 		$("#baseImage").height(height);
 		$("#viewport").css('left', x);
 		$("#viewport").css('top', y + 40);
 		$("#baseImage").attr('src', imagePath);
 		initCanvas('polygonCanvas');
+		callback();
 	};
 	imageObj.src = imagePath;
 }
