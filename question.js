@@ -46,45 +46,29 @@ function drawPoly(){
   }
 }
 
-function moveBack(){
-  if(currentPolygonIndex <= 0) return;
-  var tmpPolygon = polygons[currentPolygonIndex];
-
-  polygons[currentPolygonIndex] = polygons[currentPolygonIndex - 1];
-  $('#polygonButtonContainer .polygonButton').eq(currentPolygonIndex).removeClass('currentPolygonButton')
-
-  currentPolygonIndex = currentPolygonIndex - 1;
-
-  polygons[currentPolygonIndex] = tmpPolygon;
-  $('#polygonButtonContainer .polygonButton').eq(currentPolygonIndex).addClass('currentPolygonButton')
+function selectPolygonItem(polygonIndex){
+  if(currentPolygonIndex != -1) {
+    $('#polygonItemContainer .polygonItem').eq(currentPolygonIndex).html('');
+    $("#polygonItemContainer .currentPolygonItem").removeClass('currentPolygonItem');
+  }
+  currentPolygonIndex = polygonIndex;
+  $("#vertexContainer").empty();
+  if(currentPolygonIndex != -1){
+    $('#polygonItemContainer .polygonItem').eq(currentPolygonIndex).html(currentPolygonIndex+1);
+    $('#polygonItemContainer .polygonItem').eq(currentPolygonIndex).addClass('currentPolygonItem');
+    for(var vertexIndex in polygons[currentPolygonIndex].vertices) {
+      var position = polygons[currentPolygonIndex].vertices[vertexIndex];
+      addVertexToContainer(position.x, position.y);
+    }
+  }
+  drawPoly();
 }
 
-function moveForward(){
-  if(currentPolygonIndex >= polygons.length - 1) return;
-  var tmpPolygon = polygons[currentPolygonIndex];
-
-  polygons[currentPolygonIndex] = polygons[currentPolygonIndex + 1];
-  $('#polygonButtonContainer .polygonButton').eq(currentPolygonIndex).removeClass('currentPolygonButton')
-
-  currentPolygonIndex = currentPolygonIndex + 1;
-
-  polygons[currentPolygonIndex] = tmpPolygon;
-  $('#polygonButtonContainer .polygonButton').eq(currentPolygonIndex).addClass('currentPolygonButton')
-}
-
-function addPolygonButton(polygonIndex){
-    $('#polygonButtonContainer').append('<button class="polygonButton" polygonIndex='+polygonIndex+' type="button">'+polygonIndex+'</button>')
-    $("#polygonButtonContainer .polygonButton:last-child").click(function(){
+function addPolygonItem(polygonIndex){
+    $('#polygonItemContainer').append('<li class="polygonItem" polygonIndex='+polygonIndex+'></li>')
+    $("#polygonItemContainer .polygonItem:last-child").click(function(){
       if(currentPolygonIndex == parseInt($(this).attr('polygonIndex'))) return;
-      currentPolygonIndex = parseInt($(this).attr('polygonIndex'));
-      $("#polygonButtonContainer .currentPolygonButton").removeClass('currentPolygonButton');
-      $(this).addClass('currentPolygonButton');
-      $("#vertexContainer").empty();
-      for(var vertexIndex in polygons[currentPolygonIndex].vertices) {
-        var position = polygons[currentPolygonIndex].vertices[vertexIndex];
-        addVertexToContainer(position.x, position.y);
-      }
-      drawPoly();
+      selectPolygonItem(parseInt($(this).attr('polygonIndex')));
     });
 }
 
@@ -108,6 +92,18 @@ function save(){
   });
 }
 
+function swapPolygon(oldIndex, newIndex){
+  if(oldIndex == newIndex) {
+    return;
+  }
+  polygons.splice(newIndex,0,polygons.splice(oldIndex, 1)[0]);
+  $('#polygonItemContainer .polygonItem').each(function(index) {
+    if(index >= Math.min(oldIndex, newIndex) && index <= Math.max(oldIndex, newIndex)) {
+      $(this).attr('polygonIndex', index);
+    }
+  });
+}
+
 var polygons = [];
 var currentPolygonIndex = -1;
 var questionObj;
@@ -126,28 +122,30 @@ function init() {
   });
 
   $("#addPolygon").click(function(){
-    currentPolygonIndex = polygons.length;
-    polygons[currentPolygonIndex] = {vertices:[]};
-    addPolygonButton(currentPolygonIndex);
-    $("#polygonButtonContainer .currentPolygonButton").removeClass('currentPolygonButton');
-    $("#polygonButtonContainer .polygonButton:last-child").addClass('currentPolygonButton');
-    $("#vertexContainer").empty();
-    drawPoly();
+    polygons[polygons.length] = {vertices:[]};
+    addPolygonItem(polygons.length - 1);
+    selectPolygonItem(polygons.length - 1);
   });
 
   $("#removePolygon").click(function (){
     if(currentPolygonIndex == -1) return;
     polygons.splice(currentPolygonIndex, 1);
-    $("#polygonButtonContainer .polygonButton:last-child").remove();
-    currentPolygonIndex = -1;
-    $("#polygonButtonContainer .currentPolygonButton").removeClass('currentPolygonButton');
-    $("#vertexContainer").empty();
-    drawPoly();
+    $("#polygonItemContainer .polygonItem:last-child").remove();
+    selectPolygonItem(Math.min(currentPolygonIndex, polygons.length - 1));
   });
 
-  $("#moveBack").click(moveBack);
-  $("#moveForward").click(moveForward);
   $("#save").click(save);
+
+  $( "#polygonItemContainer" ).sortable({
+    update: function(event, ui){
+      var newIndex = $('#polygonItemContainer .polygonItem').index(ui.item);
+      var oldIndex = ui.item.attr('polygonIndex');
+      swapPolygon(oldIndex, newIndex);
+      selectPolygonItem(newIndex);
+    }
+  });
+
+  $( "#polygonItemContainer" ).disableSelection();
 
   loadImage("question.jpg", function(){
     for(var polygonIndex in questionObj.polygons) {
@@ -156,10 +154,11 @@ function init() {
         var position = questionObj.polygons[polygonIndex].vertices[vertexIndex];
         polygons[polygonIndex].vertices[vertexIndex] = {x: Math.round(position.x*scaleRatio), y: Math.round(position.y*scaleRatio)}
       }
-      addPolygonButton(polygonIndex);
+      addPolygonItem(polygonIndex);
     }
-
-    drawPoly();
+    if(polygons.length != 0) {
+      selectPolygonItem(0);
+    }
   });
 }
 
