@@ -14,4 +14,4 @@ def update_question():
 	return "ok"
 
 if __name__ == '__main__':
-    app.run(debug=True, port=int(sys.argv[1]))
+    app.run(debug=True, host='0.0.0.0', port=int(sys.argv[1]))
