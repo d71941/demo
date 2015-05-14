@@ -56,6 +56,9 @@ function init() {
 $(function(){
   $.getJSON( "question.json", function(data) {
     questionObj = data;
+  }).fail(function() {
+    questionObj = {polygons: []};
+  }).always(function() {
     init();
   });
 });
