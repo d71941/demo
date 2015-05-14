@@ -41,7 +41,9 @@ function loadImage(imagePath, callback) {
 		$("#baseImage").width(width);
 		$("#baseImage").height(height);
 		$("#viewport").css('left', x);
-		$("#viewport").css('top', y + 40);
+		$("#viewport").css('top', y + topOffset);
+		$("#viewport").width(width);
+		$("#viewport").height(height);
 		$("#baseImage").attr('src', imagePath);
 		initCanvas('polygonCanvas');
 		callback();

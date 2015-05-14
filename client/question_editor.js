@@ -48,7 +48,7 @@ function drawPoly(){
 
 function selectPolygonItem(polygonIndex){
   if(currentPolygonIndex != -1) {
-    $('#polygonItemContainer .polygonItem').eq(currentPolygonIndex).html('');
+    $('#polygonItemContainer .currentPolygonItem').html('');
     $("#polygonItemContainer .currentPolygonItem").removeClass('currentPolygonItem');
   }
   currentPolygonIndex = polygonIndex;
@@ -137,9 +137,12 @@ function init() {
   $("#save").click(save);
 
   $( "#polygonItemContainer" ).sortable({
+    start: function(event, ui){
+      selectPolygonItem(parseInt(ui.item.attr('polygonIndex')));
+    },
     update: function(event, ui){
       var newIndex = $('#polygonItemContainer .polygonItem').index(ui.item);
-      var oldIndex = ui.item.attr('polygonIndex');
+      var oldIndex = parseInt(ui.item.attr('polygonIndex'));
       swapPolygon(oldIndex, newIndex);
       selectPolygonItem(newIndex);
     }
