@@ -1,3 +1,4 @@
+import sys
 from flask import Flask
 from flask import request
 from flask import json
@@ -13,4 +14,4 @@ def update_question():
 	return "ok"
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=int(sys.argv[1]))
